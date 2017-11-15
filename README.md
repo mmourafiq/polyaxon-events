@@ -1,3 +1,3 @@
-# polyaxon-event-reporter
+# polyaxon-events
 
-Polyaxon Kubernetes event reporter
+Polyaxon Kubernetes events reporter and monitor

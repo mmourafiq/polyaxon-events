@@ -1,0 +1,3 @@
+-e git+https://github.com/polyaxon/polyaxon-k8s.git@d404fcb35744356fad6e4d8167f0960feccc4c61#egg=polyaxon-k8s
+PyYAML==3.12
+six==1.11.0
