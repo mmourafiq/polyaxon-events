@@ -18,7 +18,7 @@ class PyTest(TestCommand):
 
 setup(name='polyaxon-events',
       version='0.0.1',
-      description='Polyaxon Kubernetes events reporter and monitor.',
+      description='Polyaxon Kubernetes events monitor and publisher.',
       maintainer='Mourad Mourafiq',
       maintainer_email='mouradmourafiq@gmail.com',
       author='Mourad Mourafiq',
