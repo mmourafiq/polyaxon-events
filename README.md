@@ -4,4 +4,4 @@
 
 # polyaxon-events
 
-Polyaxon Kubernetes events monitor and publisher
+Kubernetes events monitor and publisher for Polyaxon. This is a small container to launch inside the Kubernetes cluster that will publish errors and warnings for more visibility.
