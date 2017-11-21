@@ -72,37 +72,29 @@ def run(k8s_manager, publisher):
                     if v is not None
                 }
 
-            fingerprint = []
-            tags = {}
-
-            if component:
-                tags['component'] = component
-
-            if reason:
-                tags['reason'] = event.reason
-                fingerprint.append(event.reason)
-
-            if short_name:
-                tags['name'] = short_name
-                fingerprint.append(short_name)
-
-            if kind:
-                tags['kind'] = kind
-                fingerprint.append(kind)
-
             data = {
                 'server_name': source_host or 'n/a',
-                'culprit': "%s %s" % (obj_name, reason),
+                'obj_name': obj_name,
+                'message': message
             }
 
+            if component:
+                data['component'] = component
+
+            if short_name:
+                data['name'] = short_name
+
+            if kind:
+                data['kind'] = kind
+
+            if reason:
+                data['reason '] = reason
+
             publisher.publish(dict(
-                message=message,
+                create_at=creation_timestamp,
                 data=data,
-                date=creation_timestamp,
-                extra=meta,
-                fingerprint=fingerprint,
+                meta=meta,
                 level=level,
-                tags=tags,
             ))
 
 
