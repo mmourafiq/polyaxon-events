@@ -1,4 +1,6 @@
+-e git+https://github.com/polyaxon/polyaxon-k8s.git@2512e53db650171daf4d6126f441cd3a1632411f#egg=polyaxon-k8s
+-e git+https://github.com/polyaxon/polyaxon-schemas.git@85446513208d228cc1b99ebffbbb0bc7107487f2#egg=polyaxon-schemas
+polyaxon-gpustat==0.0.11
 pika==0.11.0
--e git+https://github.com/polyaxon/polyaxon-k8s.git@d404fcb35744356fad6e4d8167f0960feccc4c61#egg=polyaxon-k8s
-PyYAML==3.12
+redis==2.10.6
 six==1.11.0

@@ -7,6 +7,7 @@ ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
+        build-essential \
         python3.5 \
         python3.5-dev \
         python3-setuptools \
@@ -22,8 +23,10 @@ RUN pip3 install --upgrade setuptools pip
 COPY requirements.txt /setup/
 RUN pip3 install --no-cache-dir -r /setup/requirements.txt
 
-VOLUME /polyaxon
-WORKDIR /polyaxon
-copy . /polyaxon
+VOLUME /polyaxon_events
+WORKDIR /polyaxon_events
+copy . /polyaxon_events
 
-CMD python3 polyaxon_events/events.py
+ENV PYTHONPATH /polyaxon_events
+
+CMD python3 -u polyaxon_events/events/sidecar.py

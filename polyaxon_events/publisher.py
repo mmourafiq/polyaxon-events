@@ -6,20 +6,20 @@ import time
 import pika
 from pika.exceptions import ConnectionClosed
 
-import settings
-from logger import logger
+from polyaxon_events import settings
 
 
-class EventPublisher(object):
+class Publisher(object):
     AMQP_URL = settings.AMQP_URL
-    LOG_ROUTING_KEY = settings.LOG_ROUTING_KEY
     EXCHANGE = settings.INTERNAL_EXCHANGE
     EXCHANGE_TYPE = 'topic'
 
-    def __init__(self):
+    def __init__(self, routing_key, content_type='application/json', delivery_mode=1):
+        self._routing_key = routing_key
         self._connection = None
         self._channel = None
-        self._properties = pika.BasicProperties(content_type='application/json', delivery_mode=1)
+        self._properties = pika.BasicProperties(content_type=content_type,
+                                                delivery_mode=delivery_mode)
         self.reset()
 
     def reset(self):
@@ -39,11 +39,10 @@ class EventPublisher(object):
         while True:
             try:
                 self._channel.basic_publish(exchange=self.EXCHANGE,
-                                            routing_key=self.LOG_ROUTING_KEY,
+                                            routing_key=self._routing_key,
                                             body=message,
                                             properties=self._properties)
-                logger.debug('published: {}'.format(message[:100]))
                 break
             except ConnectionClosed:
-                time.sleep(1)
+                time.sleep(settings.AMQP_RECONNECT_INTERVAL)
                 self.reset()

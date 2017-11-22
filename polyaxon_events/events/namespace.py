@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+import logging
+import os
 import time
 
 from kubernetes import watch
@@ -8,10 +10,10 @@ from kubernetes.client.rest import ApiException
 
 from polyaxon_k8s.manager import K8SManager
 
-import settings
-from logger import logger
+from polyaxon_events import settings
+from polyaxon_events.publisher import Publisher
 
-from publisher import EventPublisher
+logger = logging.getLogger('polyaxon.events')
 
 
 def run(k8s_manager, publisher):
@@ -100,7 +102,7 @@ def run(k8s_manager, publisher):
 
 def main():
     k8s_manager = K8SManager(namespace=settings.NAMESPACE, in_cluster=True)
-    publisher = EventPublisher()
+    publisher = Publisher(os.environ['POLYAXON_LOG_EVENTS_ROUTING_KEY'])
     while True:
         try:
             run(k8s_manager, publisher)
@@ -109,7 +111,7 @@ def main():
                 "Exception when calling CoreV1Api->list_event_for_all_namespaces: %s\n" % e)
             time.sleep(settings.LOG_SLEEP_INTERVAL)
         except Exception as e:
-            logger.exception("Unhandled exception occurred.")
+            logger.exception("Unhandled exception occurred: %s\n" % e)
 
 
 if __name__ == '__main__':
