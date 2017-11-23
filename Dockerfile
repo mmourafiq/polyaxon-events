@@ -2,15 +2,14 @@ FROM polyaxon/polyaxon-base
 
 MAINTAINER mourad mourafiq <mouradmourafiq@gmail.com>
 
-# copy requirements.txt
 COPY requirements.txt /setup/
 RUN pip3 install --no-cache-dir -r /setup/requirements.txt
 
-VOLUME /polyaxon_events
-WORKDIR /polyaxon_events
-copy . /polyaxon_events
+VOLUME /polyaxon
+WORKDIR /polyaxon
+copy . /polyaxon
 
-ENV PYTHONPATH /polyaxon_events
+ENV PYTHONPATH /polyaxon
 
 # To set directly on the chart yaml files
-#CMD python3 -u polyaxon_events/events/sidecar.py
+#CMD python3 polyaxon_events/events/sidecar.py
