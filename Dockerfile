@@ -29,4 +29,5 @@ copy . /polyaxon_events
 
 ENV PYTHONPATH /polyaxon_events
 
-CMD python3 -u polyaxon_events/events/sidecar.py
+# To set directly on the chart yaml files
+#CMD python3 -u polyaxon_events/events/sidecar.py

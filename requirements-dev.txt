@@ -1,6 +1,7 @@
--e git+https://github.com/polyaxon/polyaxon-k8s.git@2512e53db650171daf4d6126f441cd3a1632411f#egg=polyaxon-k8s
+-e git+https://github.com/polyaxon/polyaxon-k8s.git@b095c1b815ed1499de2d9f767df2e4ac92f3057f#egg=polyaxon-k8s
 -e git+https://github.com/polyaxon/polyaxon-schemas.git@85446513208d228cc1b99ebffbbb0bc7107487f2#egg=polyaxon-schemas
 polyaxon-gpustat==0.0.11
+docker==2.6.1
 pika==0.11.0
 redis==2.10.6
 six==1.11.0

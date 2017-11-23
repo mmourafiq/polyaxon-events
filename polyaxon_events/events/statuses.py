@@ -9,40 +9,65 @@ from kubernetes import watch
 from kubernetes.client.rest import ApiException
 
 from polyaxon_k8s.manager import K8SManager
-from polyaxon_k8s.constants import PodConditions, PodLifeCycle
+from polyaxon_k8s.constants import PodConditions, PodLifeCycle, JobLifeCycle
 
 from polyaxon_events import settings
+from polyaxon_events.job_containers import JobContainers
 from polyaxon_events.publisher import Publisher
 
 logger = logging.getLogger('polyaxon.events')
 
 
-def get_pod_status(event, warnings=None):
-    warnings = warnings or []
+def get_pod_status(event):
     # For terminated pods that failed and successfully terminated pods
-    if event.status.phase in [PodLifeCycle.FAILED, PodLifeCycle.SUCCEEDED]:
-        return event.status.phase
+    if event.status.phase == PodLifeCycle.FAILED:
+        return JobLifeCycle.FAILED
+
+    if event.status.phase == PodLifeCycle.SUCCEEDED:
+        return JobLifeCycle.SUCCEEDED
+
+    if event.metadata.deletion_timestamp:
+        return JobLifeCycle.DELETED
+
+    if not event.status.conditions:
+        return JobLifeCycle.UNKNOWN
 
     conditions = {c.type: c.status for c in event.status.conditions}
 
-    if conditions[PodConditions.INITIALIZED] and conditions[PodConditions.READY]:
-        return PodLifeCycle.SUCCEEDED
-
-    # If the pod would otherwise be pending but has warning then label it as
-    # failed and show and error to the user.
-    if len(warnings) > 0:
-        return PodLifeCycle.FAILED
+    if not (conditions[PodConditions.SCHEDULED] or conditions[PodConditions.READY]):
+        return JobLifeCycle.STARTING
 
     # Unknown?
     return PodLifeCycle.UNKNOWN
 
 
-def parse_event(raw_event):
+def update_job_containers(event, job_container_name):
+    if event.status.container_statuses is None:
+        return
+
+    def get_container_id(container_id):
+        if container_id.startswith('docker://'):
+            return container_id[len('docker://'):]
+        return container_id
+
+    for container_status in event.status.container_statuses:
+        if container_status.name != job_container_name:
+            continue
+
+        container_id = get_container_id(container_status.container_id)
+        job_id = event.metadata.name['task']
+        if container_status.state.running is not None:
+            JobContainers.monitor(container_id, job_id)
+
+
+def parse_event(raw_event, label_role_experiment, job_container_name):
     event_type = raw_event['type']
     event = raw_event['object']
     labels = event.metadata.labels
-    if labels['types'] != 'experiments':
+    if labels['role'] != label_role_experiment:
         return
+
+    update_job_containers(event, job_container_name)
     pod_phase = event.status.phase
     deletion_timestamp = event.metadata.deletion_timestamp
     pod_conditions = event.status.conditions
@@ -50,7 +75,7 @@ def parse_event(raw_event):
     container_statuses_by_name = {
         container_status.name: {
             'ready': container_status.ready,
-            'state': container_status.state,
+            'state': container_status.state.to_dict(),
         } for container_status in container_statuses
     }
 
@@ -60,18 +85,25 @@ def parse_event(raw_event):
         'pod_phase': pod_phase,
         'pod_status': get_pod_status(event),
         'deletion_timestamp': deletion_timestamp,
-        'pod_conditions': pod_conditions,
+        'pod_conditions': [pod_condition.to_dict() for pod_condition in pod_conditions],
         'container_statuses': container_statuses_by_name
     }
 
 
-def run(k8s_manager, publisher):
+def run(k8s_manager,
+        publisher,
+        label_role_experiment,
+        job_container_name,
+        label_selector=None,
+        field_selector=None):
     w = watch.Watch()
 
-    for event in w.stream(k8s_manager.k8s_api.list_namespaced_pod, label_selectors):
+    for event in w.stream(k8s_manager.k8s_api.list_namespaced_pod,
+                          field_selector=field_selector,
+                          label_selector=label_selector):
         logger.debug("event: %s" % event)
 
-        parsed_event = parse_event(event)
+        parsed_event = parse_event(event, label_role_experiment, job_container_name)
 
         if parsed_event:
             publisher.publish(parsed_event)
@@ -82,13 +114,17 @@ def main():
     publisher = Publisher(os.environ['POLYAXON_JOB_STATUS_ROUTING_KEY'])
     while True:
         try:
-            run(k8s_manager, publisher)
+            run(k8s_manager,
+                publisher,
+                job_container_name=os.environ['POLYAXON_JOB_CONTAINER_NAME'],
+                label_role_experiment=os.environ['POLYAXON_LABEL_ROLE_EXPERIMENT'],
+                label_selector=os.environ['POLYAXON_JOB_LABEL_SELECTOR'])
         except ApiException as e:
             logger.error(
                 "Exception when calling CoreV1Api->list_namespaced_pod: %s\n" % e)
             time.sleep(settings.LOG_SLEEP_INTERVAL)
         except Exception as e:
-            logger.exception("Unhandled exception occurred.")
+            logger.exception("Unhandled exception occurred %s\n" % e)
 
 
 if __name__ == '__main__':
