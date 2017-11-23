@@ -8,8 +8,8 @@ import redis
 class JobContainers(object):
     """Tracks containers currently running and to be monitored."""
 
-    REDIS_CONTAINERS_KEY = 'CONTAINERS'  # Redis set: jobs to monitor the status
-    REDIS_CONTAINERS_TO_JOBS = 'CONTAINERS_TO_JOBS'  # Redis hash, maps jobs to experiments
+    REDIS_CONTAINERS_KEY = 'CONTAINERS'  # Redis set: container ids
+    REDIS_CONTAINERS_TO_JOBS = 'CONTAINERS_TO_JOBS'  # Redis hash, maps container id to jobs
     REDIS_POOL = os.environ['POLYAXON_JOB_CONTAINERS']  # Redis pool
 
     @classmethod
