@@ -9,7 +9,5 @@ VOLUME /polyaxon
 WORKDIR /polyaxon
 copy . /polyaxon
 
-ENV PYTHONPATH /polyaxon
-
 # To set directly on the chart yaml files
 #CMD python3 polyaxon_events/events/sidecar.py

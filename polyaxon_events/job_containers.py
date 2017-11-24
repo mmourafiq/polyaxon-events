@@ -10,7 +10,8 @@ class JobContainers(object):
 
     REDIS_CONTAINERS_KEY = 'CONTAINERS'  # Redis set: container ids
     REDIS_CONTAINERS_TO_JOBS = 'CONTAINERS_TO_JOBS'  # Redis hash, maps container id to jobs
-    REDIS_POOL = os.environ['POLYAXON_JOB_CONTAINERS_URL']  # Redis pool
+    REDIS_POOL = redis.ConnectionPool.from_url(
+        os.environ['POLYAXON_JOB_CONTAINERS_URL'])  # Redis pool
 
     @classmethod
     def _get_redis(cls):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+import json
 import logging
 
 import os
@@ -13,6 +14,7 @@ from polyaxon_k8s.constants import ContainerStatuses
 from polyaxon_events import settings
 from polyaxon_events.job_containers import JobContainers
 from polyaxon_events.publisher import Publisher
+from polyaxon_events.utils import datetime_handler
 
 logger = logging.getLogger('polyaxon.resources')
 
@@ -95,7 +97,7 @@ def run(publisher, containers):
     for container_id in container_ids:
         c_resources = get_container_resources(containers[container_id], gpu_resources)
         if c_resources:
-            publisher.publish(c_resources)
+            publisher.publish(json.dumps(c_resources, default=datetime_handler))
 
 
 def main():

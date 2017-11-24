@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+import json
 import logging
 import os
 import time
@@ -12,6 +13,7 @@ from polyaxon_k8s.manager import K8SManager
 
 from polyaxon_events import settings
 from polyaxon_events.publisher import Publisher
+from polyaxon_events.utils import datetime_handler
 
 logger = logging.getLogger('polyaxon.events')
 
@@ -19,7 +21,8 @@ logger = logging.getLogger('polyaxon.events')
 def run(k8s_manager, publisher):
     w = watch.Watch()
 
-    for event in w.stream(k8s_manager.k8s_api.list_namespaced_event, settings.NAMESPACE):
+    for event in w.stream(k8s_manager.k8s_api.list_namespaced_event,
+                          namespace=k8s_manager.namespace):
         logger.debug("event: %s" % event)
 
         event_type = event['type'].lower()
@@ -92,12 +95,14 @@ def run(k8s_manager, publisher):
             if reason:
                 data['reason '] = reason
 
-            publisher.publish(dict(
+            data = json.dumps(dict(
                 create_at=creation_timestamp,
                 data=data,
                 meta=meta,
                 level=level,
-            ))
+            ), default=datetime_handler)
+
+            publisher.publish(data)
 
 
 def main():

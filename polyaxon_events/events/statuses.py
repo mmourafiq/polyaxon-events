@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+import json
 import logging
 import os
 import time
@@ -14,6 +15,7 @@ from polyaxon_k8s.constants import PodConditions, PodLifeCycle, JobLifeCycle
 from polyaxon_events import settings
 from polyaxon_events.job_containers import JobContainers
 from polyaxon_events.publisher import Publisher
+from polyaxon_events.utils import datetime_handler
 
 logger = logging.getLogger('polyaxon.events')
 
@@ -54,10 +56,12 @@ def update_job_containers(event, job_container_name):
         if container_status.name != job_container_name:
             continue
 
-        container_id = get_container_id(container_status.container_id)
-        job_id = event.metadata.name['task']
-        if container_status.state.running is not None:
-            JobContainers.monitor(container_id, job_id)
+        container_id = container_status.container_id
+        if container_id:
+            container_id = get_container_id(container_id)
+            job_id = event.metadata.labels['task']
+            if container_status.state.running is not None:
+                JobContainers.monitor(container_id, job_id)
 
 
 def parse_event(raw_event, experiment_type_label, job_container_name):
@@ -94,19 +98,18 @@ def run(k8s_manager,
         publisher,
         experiment_type_label,
         job_container_name,
-        label_selector=None,
-        field_selector=None):
+        label_selector=None):
     w = watch.Watch()
 
     for event in w.stream(k8s_manager.k8s_api.list_namespaced_pod,
-                          field_selector=field_selector,
+                          namespace=k8s_manager.namespace,
                           label_selector=label_selector):
         logger.debug("event: %s" % event)
 
         parsed_event = parse_event(event, experiment_type_label, job_container_name)
 
         if parsed_event:
-            publisher.publish(parsed_event)
+            publisher.publish(json.dumps(parsed_event, default=datetime_handler))
 
 
 def main():
