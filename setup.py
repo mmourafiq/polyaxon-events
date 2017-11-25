@@ -40,8 +40,11 @@ setup(name='polyaxon-events',
           'kubernetes',
       ],
       install_requires=[
-          'polyaxon-k8s==0.0.1',
-          'PyYAML==3.12',
+          'pika==0.11.0',
+          'polyaxon-gpustat==0.0.11',
+          'polyaxon-schemas==0.0.16',
+          'polyaxon-k8s==0.0.11',
+          'redis==2.10.6',
           'six==1.11.0',
       ],
       classifiers=[
