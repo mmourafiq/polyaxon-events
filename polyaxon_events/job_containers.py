@@ -20,13 +20,16 @@ class JobContainers(object):
     @classmethod
     def get_containers(cls):
         red = cls._get_redis()
-        red.smembers(cls.REDIS_CONTAINERS_KEY)
+        container_ids = red.smembers(cls.REDIS_CONTAINERS_KEY)
+        return [container_id.decode('utf-8') for container_id in container_ids]
 
     @classmethod
     def get_job(cls, object_id):
         red = cls._get_redis()
+        job_id = None
         if red.sismember(cls.REDIS_CONTAINERS_KEY, object_id):
-            return red.hget(cls.REDIS_CONTAINERS_TO_JOBS, object_id)
+            job_id = red.hget(cls.REDIS_CONTAINERS_TO_JOBS, object_id)
+        return job_id.decode('utf-8') if job_id else None
 
     @classmethod
     def monitor(cls, object_id, job_id):

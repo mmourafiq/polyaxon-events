@@ -8,7 +8,9 @@ import os
 import re
 import time
 
+import docker
 import polyaxon_gpustat
+from docker.errors import NotFound
 from polyaxon_k8s.constants import ContainerStatuses
 
 from polyaxon_events import settings
@@ -17,23 +19,43 @@ from polyaxon_events.publisher import Publisher
 from polyaxon_events.utils import datetime_handler
 
 logger = logging.getLogger('polyaxon.resources')
-
+docker_client = docker.from_env(version="auto", timeout=10)
 
 def get_gpu_resources():
     if not polyaxon_gpustat.has_gpu_nvidia:
         return
 
-    return polyaxon_gpustat.query()
+    try:
+        return polyaxon_gpustat.query()
+    except:
+        polyaxon_gpustat.has_gpu_nvidia = False
 
 
 def get_container_gpu_indices(container):
     gpus = []
     devices = container.attrs['HostConfig']['Devices']
     for dev in devices:
-        match = re.match(r'/dev/nvidia(?P<index>[0-9]+)',  dev['PathOnHost'])
+        match = re.match(r'/dev/nvidia(?P<index>[0-9]+)', dev['PathOnHost'])
         if match:
             gpus.append(match.group('index'))
     return gpus
+
+
+def get_container(containers, container_id):
+    if container_id in containers:
+        return containers[container_id]
+
+    try:
+        container = docker_client.containers.get(container_id)
+    except NotFound:
+        logger.info("container `{}` was not found".format(container_id))
+        return None
+
+    if container.status != ContainerStatuses.RUNNING:
+        return None
+
+    containers[container_id] = container
+    return container
 
 
 def get_container_resources(container, gpu_resources):
@@ -95,13 +117,17 @@ def run(publisher, containers):
     if gpu_resources:
         gpu_resources = {gpu_resource['index']: gpu_resource for gpu_resource in gpu_resources}
     for container_id in container_ids:
+        container = get_container(containers, container_id)
+        if not container:
+            JobContainers.remove_container(container_id)
         c_resources = get_container_resources(containers[container_id], gpu_resources)
         if c_resources:
+            logger.info('{}'.format(c_resources))
             publisher.publish(json.dumps(c_resources, default=datetime_handler))
 
 
 def main():
-    publisher = Publisher(os.environ['POLYAXON_JOB_RESOURCES_ROUTING_KEY'])
+    publisher = Publisher(os.environ['POLYAXON_EVENTS_RESOURCES_ROUTING_KEY'])
     containers = {}
     while True:
         try:

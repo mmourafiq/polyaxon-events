@@ -61,6 +61,8 @@ def update_job_containers(event, job_container_name):
             container_id = get_container_id(container_id)
             job_id = event.metadata.labels['task']
             if container_status.state.running is not None:
+                logger.info('Monitoring (container_id, job_id): ({}, {})'.format(container_id,
+                                                                                 job_id))
                 JobContainers.monitor(container_id, job_id)
 
 
