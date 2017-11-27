@@ -14,3 +14,4 @@ RUN pip3 install --no-cache-dir -r /setup/requirements-test.txt
 VOLUME /polyaxon
 WORKDIR /polyaxon
 copy . /polyaxon
+ENV PYTHONPATH /polyaxon
