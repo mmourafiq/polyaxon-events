@@ -107,7 +107,7 @@ def run(k8s_manager, publisher):
 
 def main():
     k8s_manager = K8SManager(namespace=settings.NAMESPACE, in_cluster=True)
-    publisher = Publisher(os.environ['POLYAXON_EVENTS_NAMESPACE_ROUTING_KEY'])
+    publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_EVENTS_NAMESPACE'])
     while True:
         try:
             run(k8s_manager, publisher)

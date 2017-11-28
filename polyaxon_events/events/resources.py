@@ -127,7 +127,7 @@ def run(publisher, containers):
 
 
 def main():
-    publisher = Publisher(os.environ['POLYAXON_EVENTS_RESOURCES_ROUTING_KEY'])
+    publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_EVENTS_RESOURCES'])
     containers = {}
     while True:
         try:

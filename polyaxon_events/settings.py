@@ -11,7 +11,7 @@ NAMESPACE = os.environ['POLYAXON_K8S_NAMESPACE']
 AMQP_URL = os.environ['POLYAXON_AMQP_URL']
 AMQP_RECONNECT_INTERVAL = int(os.environ.get('POLYAXON_AMQP_RECONNECT_INTERVAL', 1))
 INTERNAL_EXCHANGE = os.environ['POLYAXON_INTERNAL_EXCHANGE']
-LOG_SLEEP_INTERVAL = int(os.environ.get('POLYAXON_LOG_SLEEP_INTERVAL', 1))
+LOG_SLEEP_INTERVAL = int(os.environ.get('POLYAXON_INTERVALS_LOGS_SLEEP', 1))
 DEBUG = os.environ.get('POLYAXON_DEBUG')
 
 # mapping from k8s event types to event levels

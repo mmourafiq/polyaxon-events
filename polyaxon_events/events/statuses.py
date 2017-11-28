@@ -116,11 +116,11 @@ def run(k8s_manager,
 
 def main():
     k8s_manager = K8SManager(namespace=settings.NAMESPACE, in_cluster=True)
-    publisher = Publisher(os.environ['POLYAXON_EVENTS_JOB_STATUS_ROUTING_KEY'])
+    publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_EVENTS_JOB_STATUSES'])
     while True:
         try:
-            role_label = os.environ['POLYAXON_WORKER_ROLE_LABEL']
-            type_label = os.environ['POLYAXON_EXPERIMENT_TYPE_LABEL']
+            role_label = os.environ['POLYAXON_ROLE_LABELS_WORKER']
+            type_label = os.environ['POLYAXON_TYPE_LABELS_EXPERIMENT']
             label_selector = 'role={},type={}'.format(role_label, type_label)
             run(k8s_manager,
                 publisher,
