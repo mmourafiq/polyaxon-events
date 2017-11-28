@@ -40,7 +40,7 @@ def main():
     job_id = os.environ['POLYAXON_JOB_ID']
     k8s_manager = K8SManager(namespace=settings.NAMESPACE, in_cluster=True)
     can_log(k8s_manager, pod_id)
-    publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_LOGS_SIDECAR'],
+    publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_LOGS_SIDECARS'],
                           content_type='text/plain')
     run(k8s_manager, publisher, pod_id, job_id)
     logger.debug('Finished logging')
