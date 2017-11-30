@@ -102,6 +102,7 @@ def run(k8s_manager, publisher):
                 level=level,
             ), default=datetime_handler)
 
+            logger.info("Publishing event: {}".format(data))
             publisher.publish(data)
 
 

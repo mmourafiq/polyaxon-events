@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function
 import time
 
 import pika
-from pika.exceptions import ConnectionClosed
+from pika.exceptions import ConnectionClosed, ChannelClosed
 
 from polyaxon_events import settings
 
@@ -26,9 +26,11 @@ class Publisher(object):
         if self._connection:
             self._connection.close()
         self._connection = pika.BlockingConnection(pika.URLParameters(self.AMQP_URL))
-        self._channel = self._connection.channel()
-        self._channel.exchange_declare(exchange=self.EXCHANGE,
-                                       exchange_type=self.EXCHANGE_TYPE)
+        try:
+            self._channel = self._connection.channel()
+            self._channel.exchange_declare(exchange=self.EXCHANGE, exchange_type=self.EXCHANGE_TYPE)
+        except ChannelClosed:
+            self._channel = self._connection.channel()
 
     def can_publish(self):
         return self._channel is None or not self._channel.is_open

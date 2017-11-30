@@ -21,7 +21,7 @@ def run(k8s_manager, publisher, pod_id, job_id):
                                                       follow=True,
                                                       _preload_content=False)
     for line in raw.stream():
-        logger.debug(line)
+        logger.info("Publishing event: {}".format(line))
         publisher.publish(line)
 
 
@@ -40,6 +40,7 @@ def main():
     job_id = os.environ['POLYAXON_JOB_ID']
     k8s_manager = K8SManager(namespace=settings.NAMESPACE, in_cluster=True)
     can_log(k8s_manager, pod_id)
+    # TODO: add experiment id and job id to the routing key
     publisher = Publisher(os.environ['POLYAXON_ROUTING_KEYS_LOGS_SIDECARS'],
                           content_type='text/plain')
     run(k8s_manager, publisher, pod_id, job_id)

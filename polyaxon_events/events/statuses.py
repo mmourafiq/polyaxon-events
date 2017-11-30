@@ -37,7 +37,7 @@ def get_pod_status(event):
     conditions = {c.type: c.status for c in event.status.conditions}
 
     if not (conditions[PodConditions.SCHEDULED] or conditions[PodConditions.READY]):
-        return JobLifeCycle.STARTING
+        return JobLifeCycle.BUILDING
 
     # Unknown?
     return PodLifeCycle.UNKNOWN
@@ -111,7 +111,9 @@ def run(k8s_manager,
         parsed_event = parse_event(event, experiment_type_label, job_container_name)
 
         if parsed_event:
-            publisher.publish(json.dumps(parsed_event, default=datetime_handler))
+            parsed_event = json.dumps(parsed_event, default=datetime_handler)
+            logger.info("Publishing event: {}".format(parsed_event))
+            publisher.publish(parsed_event)
 
 
 def main():
